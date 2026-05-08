@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover">
+<title>Test Teclado iOS PWA</title>
+<style>
+body{
+  font-family: Arial;
+  padding:20px;
+}
+button{
+  display:block;
+  margin:10px 0;
+  padding:12px;
+  font-size:16px;
+}
+input{
+  display:block;
+  margin:10px 0;
+  padding:12px;
+  font-size:16px;
+  width:100%;
+}
+</style>
+</head>
+<body>
+
+<h2>Test teclado iOS (PWA)</h2>
+
+<input placeholder="Input normal">
+
+<button onclick="test1()">Focus directo (click)</button>
+<button onclick="test2()">Touchstart focus</button>
+<button onclick="test3()">Proxy suave</button>
+<button onclick="test4()">Pointerdown</button>
+
+<input id="target" placeholder="Input objetivo">
+
+<script>
+function test1(){
+  document.getElementById('target').focus();
+}
+
+function test2(){
+  document.addEventListener('touchstart', function(e){
+    document.getElementById('target').focus();
+  }, {once:true});
+}
+
+function test3(){
+  let proxy = document.createElement('input');
+  proxy.style.position='fixed';
+  proxy.style.opacity='0';
+  proxy.style.fontSize='16px';
+  document.body.appendChild(proxy);
+
+  proxy.focus();
+  setTimeout(()=>{
+    document.getElementById('target').focus();
+  },50);
+}
+
+function test4(){
+  document.addEventListener('pointerdown', function(e){
+    document.getElementById('target').focus();
+  }, {once:true});
+}
+</script>
+
+</body>
+</html>

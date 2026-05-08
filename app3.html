@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>App Test v1.2</title>
+
+<style>
+body{
+  font-family:Arial;
+  padding:20px;
+}
+input, textarea{
+  width:100%;
+  padding:12px;
+  font-size:16px;
+  margin-bottom:10px;
+}
+button{
+  width:100%;
+  padding:14px;
+  font-size:16px;
+}
+.backBtn{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  width:55px;
+  height:55px;
+  border-radius:50%;
+  border:none;
+  background:#0E4C92;
+  color:#fff;
+  font-size:22px;
+  box-shadow:0 8px 20px rgba(0,0,0,.4);
+  z-index:9999;
+}
+</style>
+
+</head>
+
+<body>
+
+<h2>Test Teclado iOS (v1.2 PROXY)</h2>
+
+<input placeholder="Nombre">
+<input placeholder="Teléfono">
+<textarea placeholder="Notas" style="height:100px;"></textarea>
+
+<button onclick="alert('OK')">Probar botón</button>
+
+<button class="backBtn" onclick="goHome()">🏠</button>
+
+<script>
+// PROXY FIX iOS PWA
+(function(){
+  let proxy = document.createElement('input');
+  proxy.type = 'text';
+  proxy.style.position = 'fixed';
+  proxy.style.opacity = '0';
+  proxy.style.pointerEvents = 'none';
+  proxy.style.height = '0';
+  proxy.style.fontSize = '16px';
+  document.body.appendChild(proxy);
+
+  function openKeyboard(target){
+    proxy.value = target.value || '';
+    proxy.focus();
+    setTimeout(()=>{
+      target.focus();
+    }, 60);
+  }
+
+  document.addEventListener('pointerdown', function(e){
+    const el = e.target.closest('input, textarea');
+    if(!el) return;
+    openKeyboard(el);
+  }, true);
+})();
+
+function goHome(){
+  window.location.href = "index.html";
+}
+</script>
+
+</body>
+</html>

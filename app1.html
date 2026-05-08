@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>App Test v1.1</title>
+
+<style>
+body{
+  font-family:Arial;
+  padding:20px;
+}
+input, textarea{
+  width:100%;
+  padding:12px;
+  font-size:16px;
+  margin-bottom:10px;
+}
+button{
+  width:100%;
+  padding:14px;
+  font-size:16px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h2>Test Teclado iOS (v1.1)</h2>
+
+<input placeholder="Nombre">
+<input placeholder="Teléfono">
+<textarea placeholder="Notas" style="height:100px;"></textarea>
+
+<button onclick="alert('OK')">Probar botón</button>
+
+<script>
+document.addEventListener('touchstart', function(e){
+  const el = e.target.closest('input, textarea');
+  if(el){
+    el.focus();
+  }
+}, {passive:true});
+</script>
+
+</body>
+</html>

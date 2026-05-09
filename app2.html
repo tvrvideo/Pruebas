@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Language" content="es-ES">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Revisiones v4.1.2</title>
+<title>Revisiones v4.1.6</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0E4C92">
 <meta name="apple-mobile-web-app-title" content="Talleres Lista">
@@ -486,13 +486,14 @@ body.theme-beige .vehicleCard.matchTop{
   border:1px solid rgba(198,40,40,.55);
   background: rgba(198,40,40,.22);
   color:#fff;
-  display:flex;
+  display:none;
   align-items:center;
   justify-content:center;
   font-size: 16px;
   padding:0;
   opacity: .9;
 }
+.workCard.open .trashBtn{ display:flex; }
 .trashBtn:active{ background: rgba(198,40,40,.35); opacity:1; }
 
 .sectionTitle{margin-top:18px;font-weight:900;font-size: calc(22px * var(--fontScale));}
@@ -871,6 +872,9 @@ input, textarea, select {
   touch-action: auto !important;
 }
 
+/* v4.1.4 - Cliente y domicilio en líneas separadas a ancho completo */
+.vehicleForm .vehicleLine2 > .field:only-child{ grid-column:1 / -1; }
+
 </style>
 </head>
 
@@ -879,7 +883,7 @@ input, textarea, select {
 <header id="appHeader">
   <div class="titleblock">
     <h1>Revisiones</h1>
-    <div class="ver">v4.1.2</div>
+    <div class="ver">v4.1.6</div>
   </div>
 
   <div class="logoBox" id="logoBox" title="Pulsa para cambiar el logo">
@@ -990,6 +994,9 @@ input, textarea, select {
           <label>Cliente</label>
           <input id="dOwner" autocomplete="off">
         </div>
+      </div>
+
+      <div class="row vehicleLine2">
         <div class="field">
           <label>Domicilio</label>
           <input id="dAddress" autocomplete="street-address">
@@ -1058,6 +1065,9 @@ input, textarea, select {
           <label>Cliente</label>
           <input id="aOwner" autocomplete="off">
         </div>
+      </div>
+
+      <div class="row vehicleLine2">
         <div class="field">
           <label>Domicilio</label>
           <input id="aAddress" autocomplete="street-address">
@@ -2598,10 +2608,10 @@ document.getElementById(&#x27;btnExportMenu&#x27;).addEventListener(&#x27;click&
       <p class="hint" style="margin-top:0;">Copia de seguridad en formato <b>.json</b>.</p>
       <div class="row">
         <button class="primary" id="btnExport">Exportar copia de seguridad</button>
-        <button class="primary" id="btnRestore">Restaurar copia de seguridad</button>
+        <button class="primary" id="btnRestore">Importar/Fusionar copia de seguridad</button>
       </div>
       <input type="file" id="restorePicker" accept="application/json,.json">
-      <p class="hint">Al restaurar se reemplazarán los datos actuales por los del archivo.</p>
+      <p class="hint">Al importar se fusionarán los vehículos: se añaden los que falten y, si un vehículo existe en ambos móviles, se conserva el dato más reciente. No se borra lo que ya tengas.</p>
     </div>
   
       <hr style="margin:20px 0; opacity:.2;">
@@ -3063,9 +3073,17 @@ const daysUntil = (isoDate) => {
     return w;
   };
 
+  const makeVehicleId = () => {
+    try{
+      if(window.crypto && crypto.randomUUID) return 'v_' + crypto.randomUUID();
+    }catch(e){}
+    return 'v_' + Math.random().toString(16).slice(2) + Date.now().toString(16);
+  };
+
   const createVehicle = (example=false) => ({
-    id: 'v_' + Math.random().toString(16).slice(2) + Date.now().toString(16),
+    id: makeVehicleId(),
     created: example ? todayISO() : '',
+    updatedAt: Date.now(),
     plate: example ? '0000AAA' : '',
     km: '',
     vehicle: example ? 'Audi A3' : '',
@@ -3079,6 +3097,20 @@ const daysUntil = (isoDate) => {
     hiddenWorks: [],
     works: emptyWorksFromList(DEFAULT_WORKS)
   });
+
+  const getVehicleKey = (v) => {
+    const id = (v && v.id != null) ? String(v.id).trim() : '';
+    if(id) return 'id:' + id;
+    const plate = String((v && v.plate) || '').trim().toUpperCase();
+    const owner = String((v && v.owner) || '').trim().toLowerCase();
+    const vin = String((v && v.vin) || '').trim().toUpperCase();
+    if(vin) return 'vin:' + vin;
+    return 'plate:' + plate + '|owner:' + owner;
+  };
+
+  const markUpdated = (v) => {
+    if(v) v.updatedAt = Date.now();
+  };
 
   const loadDB = () => {
     try {
@@ -3096,7 +3128,11 @@ const daysUntil = (isoDate) => {
   const normalizeDB = () => {
     try{
       if(!Array.isArray(db.vehicles)) db.vehicles = [];
+      let changed = false;
       db.vehicles.forEach(v => {
+        if(!v.id){ v.id = makeVehicleId(); changed = true; }
+        else if(typeof v.id !== 'string'){ v.id = String(v.id); changed = true; }
+        if(typeof v.updatedAt !== 'number' || !isFinite(v.updatedAt)){ v.updatedAt = Date.now(); changed = true; }
         if(typeof v.km !== 'string') v.km = (v.km == null ? '' : String(v.km));
         if(typeof v.vehicle !== 'string') v.vehicle = (v.vehicle == null ? '' : String(v.vehicle));
         if(typeof v.vin !== 'string') v.vin = (v.vin == null ? '' : String(v.vin));
@@ -3176,6 +3212,10 @@ const daysUntil = (isoDate) => {
           v.works[name] = w;
         });
       });
+      if(changed){
+        try{ localStorage.setItem('talleres_lista_pre_migracion_' + Date.now(), localStorage.getItem(STORAGE) || ''); }catch(e){}
+        try{ localStorage.setItem(STORAGE, JSON.stringify(db)); }catch(e){}
+      }
     }catch(e){}
   };
   normalizeDB();
@@ -3666,7 +3706,7 @@ const isCorreas = name.trim().toLowerCase().includes('correas');
       const frenosBody = `
         <div class="workGrid3">
           <div class="field">
-            <label>Freno</label>
+            <label>Pastillas</label>
             <div class="filterNameBox"><input class="filterNameInput" data-name="${safeName}" data-k="frenoDelNombre" value="${escAttr(w.frenoDelNombre || 'Delantero')}" placeholder="Delantero" autocomplete="off"></div>
           </div>
           <div class="field">
@@ -3681,7 +3721,7 @@ const isCorreas = name.trim().toLowerCase().includes('correas');
 
         <div class="workGrid3">
           <div class="field">
-            <label>Freno</label>
+            <label>Pastillas</label>
             <div class="filterNameBox"><input class="filterNameInput" data-name="${safeName}" data-k="frenoTrasNombre" value="${escAttr(w.frenoTrasNombre || 'Trasero')}" placeholder="Trasero" autocomplete="off"></div>
           </div>
           <div class="field">
@@ -3696,7 +3736,7 @@ const isCorreas = name.trim().toLowerCase().includes('correas');
 
         <div class="workGrid3">
           <div class="field">
-            <label>Freno</label>
+            <label>Pastillas</label>
             <div class="filterNameBox"><input class="filterNameInput" data-name="${safeName}" data-k="frenoLiquidoNombre" value="${escAttr(w.frenoLiquidoNombre || 'Líquido')}" placeholder="Líquido" autocomplete="off"></div>
           </div>
           <div class="field">
@@ -3768,18 +3808,6 @@ const isCorreas = name.trim().toLowerCase().includes('correas');
             <label>Traseras %</label>
             <input data-name="${safeName}" data-k="neuVehiculoTras" value="${escAttr(w.neuVehiculoTras || '')}" inputmode="decimal">
           </div>
-        </div>
-
-        <div class="workGrid3">
-          <div class="field">
-            <label>Rueda</label>
-            <div class="filterNameBox"><input class="filterNameInput" data-name="${safeName}" data-k="neuRepuestoNombre" value="${escAttr(w.neuRepuestoNombre || 'Repuesto')}" autocomplete="off"></div>
-          </div>
-          <div class="field">
-            <label>Estado %</label>
-            <input data-name="${safeName}" data-k="neuRepuestoEstado" value="${escAttr(w.neuRepuestoEstado || '')}" inputmode="decimal">
-          </div>
-          <div></div>
         </div>
 
         <div class="notesBox">
@@ -4063,6 +4091,7 @@ const genericBody = `
     renderWorksCards(detailWorks, v.works, (name, k, val) => {
       if(!v.works[name]) v.works[name] = {done:'', next:'', km:'', notes:''};
       v.works[name][k] = val;
+      markUpdated(v);
       saveDB();
     }, v.hiddenWorks || []);
 
@@ -4084,6 +4113,7 @@ const genericBody = `
       v.dni = (dDni.value || '').trim().toUpperCase();
       v.phone = dPhone.value || '';
       if(dGeneralNotes) v.generalNotes = dGeneralNotes.value || '';
+      markUpdated(v);
       saveDB();
       renderList();
       renderHomeAlerts();
@@ -4096,11 +4126,13 @@ const genericBody = `
     const v = getCurrentVehicle();
     if(!v) return;
     addCustomWorkTo(v);
+    markUpdated(v);
     saveDB();
     renderHomeAlerts();
     renderWorksCards(detailWorks, v.works, (name, k, val) => {
       if(!v.works[name]) v.works[name] = {done:'', next:'', km:'', notes:''};
       v.works[name][k] = val;
+      markUpdated(v);
       saveDB();
     }, v.hiddenWorks || []);
   });
@@ -4163,6 +4195,7 @@ const genericBody = `
     v.generalNotes = aGeneralNotes ? (aGeneralNotes.value || '') : '';
     v.hiddenWorks = Array.isArray(addHiddenWorks) ? addHiddenWorks.slice() : [];
     v.works = addWorksObj;
+    markUpdated(v);
 
     db.vehicles.unshift(v);
     saveDB();
@@ -4208,6 +4241,43 @@ const genericBody = `
     setTimeout(() => URL.revokeObjectURL(url), 2000);
   };
 
+  const mergeVehicles = (incomingVehicles) => {
+    const now = Date.now();
+    const localByKey = new Map();
+    db.vehicles.forEach(v => {
+      if(!v.id) v.id = makeVehicleId();
+      if(typeof v.updatedAt !== 'number' || !isFinite(v.updatedAt)) v.updatedAt = now;
+      localByKey.set(getVehicleKey(v), v);
+    });
+
+    let added = 0, updated = 0, kept = 0;
+    incomingVehicles.forEach(src => {
+      if(!src || typeof src !== 'object') return;
+      const incoming = JSON.parse(JSON.stringify(src));
+      if(!incoming.id) incoming.id = makeVehicleId();
+      if(typeof incoming.id !== 'string') incoming.id = String(incoming.id);
+      if(typeof incoming.updatedAt !== 'number' || !isFinite(incoming.updatedAt)) incoming.updatedAt = now;
+
+      const key = getVehicleKey(incoming);
+      const local = localByKey.get(key);
+      if(!local){
+        db.vehicles.unshift(incoming);
+        localByKey.set(key, incoming);
+        added++;
+        return;
+      }
+      if((incoming.updatedAt || 0) > (local.updatedAt || 0)){
+        Object.keys(local).forEach(k => delete local[k]);
+        Object.assign(local, incoming);
+        updated++;
+      }else{
+        kept++;
+      }
+    });
+    normalizeDB();
+    return {added, updated, kept};
+  };
+
   const restoreBackup = async (file) => {
     const text = await file.text();
     let payload;
@@ -4217,12 +4287,18 @@ const genericBody = `
                : (payload && Array.isArray(payload.vehicles) ? payload : null);
 
     if(!newDB){ alert('El archivo no tiene el formato esperado.'); return; }
-    if(!confirm('Esto reemplazará los datos actuales. ¿Continuar?')) return;
+    if(!confirm('Se fusionará esta copia con los datos actuales. No se borrarán vehículos locales. ¿Continuar?')) return;
 
+    try{
+      localStorage.setItem('talleres_lista_pre_importacion_' + Date.now(), JSON.stringify(db));
+    }catch(e){}
+
+    let result;
     try {
-      localStorage.setItem(STORAGE, JSON.stringify(newDB));
+      result = mergeVehicles(newDB.vehicles || []);
+      saveDB();
     } catch(e){
-      alert('No se pudo guardar en el dispositivo (almacenamiento lleno o restringido).');
+      alert('No se pudo fusionar la copia en este dispositivo.');
       return;
     }
 
@@ -4237,11 +4313,9 @@ const genericBody = `
       }
     } catch(e){}
 
-    const reloaded = loadDB();
-    db.vehicles = reloaded.vehicles || [];
-    saveDB();
     renderList();
-    alert('Copia restaurada ✅');
+    renderHomeAlerts();
+    alert('Copia fusionada ✅\nAñadidos: ' + result.added + '\nActualizados: ' + result.updated + '\nConservados: ' + result.kept);
     showView(listView);
   };
 
@@ -4527,205 +4601,85 @@ document.addEventListener('blur', function(e){
 
 
 <script>
-/* v4.1.2 iOS18 keyboard wake */
+/* v4.1.5 iOS/iPhone: no abrir teclado/campo al deslizar sobre inputs */
 (function(){
-  function wakeKeyboard(e){
-    const el = e.target.closest('input, textarea, select');
+  let touchInfo = null;
+  let lastScrollTouchAt = 0;
+  const MOVE_LIMIT = 10;
+
+  function editableFromEvent(e){
+    if(!e || !e.target || !e.target.closest) return null;
+    return e.target.closest('input, textarea, select');
+  }
+
+  document.addEventListener('touchstart', function(e){
+    const el = editableFromEvent(e);
+    if(!el || !e.touches || !e.touches.length) return;
+    const t = e.touches[0];
+    touchInfo = {
+      el,
+      x: t.clientX,
+      y: t.clientY,
+      moved: false,
+      at: Date.now()
+    };
+  }, {passive:true, capture:true});
+
+  document.addEventListener('touchmove', function(e){
+    if(!touchInfo || !e.touches || !e.touches.length) return;
+    const t = e.touches[0];
+    const dx = Math.abs(t.clientX - touchInfo.x);
+    const dy = Math.abs(t.clientY - touchInfo.y);
+    if(dx > MOVE_LIMIT || dy > MOVE_LIMIT){
+      touchInfo.moved = true;
+      lastScrollTouchAt = Date.now();
+    }
+  }, {passive:true, capture:true});
+
+  document.addEventListener('touchend', function(e){
+    if(!touchInfo) return;
+    const info = touchInfo;
+    touchInfo = null;
+
+    // Si era scroll, no dejamos que el campo quede activo ni que salte el teclado.
+    if(info.moved){
+      lastScrollTouchAt = Date.now();
+      if(document.activeElement === info.el && info.el.blur){
+        info.el.blur();
+      }
+      return;
+    }
+
+    // Si fue toque limpio, mantenemos la edición normal en iOS.
+    if(info.el && info.el.focus){
+      setTimeout(function(){
+        if(Date.now() - lastScrollTouchAt > 180){
+          info.el.focus();
+        }
+      }, 0);
+    }
+  }, {passive:true, capture:true});
+
+  document.addEventListener('focusin', function(e){
+    const el = editableFromEvent(e);
     if(!el) return;
-    el.focus();
-  }
+    if(Date.now() - lastScrollTouchAt < 220){
+      setTimeout(function(){
+        if(document.activeElement === el && el.blur) el.blur();
+      }, 0);
+    }
+  }, true);
 
-  document.addEventListener('touchstart', wakeKeyboard, {passive:true});
-  document.addEventListener('click', wakeKeyboard, true);
+  document.addEventListener('click', function(e){
+    const el = editableFromEvent(e);
+    if(!el) return;
+    if(Date.now() - lastScrollTouchAt < 220){
+      e.preventDefault();
+      e.stopPropagation();
+      if(el.blur) el.blur();
+    }
+  }, true);
 })();
-</script>
-
-
-<!-- TECLADO PRO FIX v5.4 -->
-<style>
-#btnKeyboard{
-  position:fixed;
-  bottom:140px;
-  right:20px;
-  z-index:9999;
-  padding:12px;
-  border-radius:12px;
-  background:#0E4C92;
-  color:#fff;
-  display:none;
-}
-#keyboard{
-  position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
-  background:#d1d5db;
-  padding:6px;
-  padding-bottom: calc(env(safe-area-inset-bottom) + 6px);
-  display:none;
-  z-index:9998;
-}
-#keyboard .kb-inner{
-  max-width:420px;
-  margin:0 auto;
-}
-.row{
-  display:flex;
-  justify-content:center;
-  gap:6px;
-  margin-bottom:6px;
-}
-.key{
-  width:32px;
-  height:44px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#fff;
-  border-radius:8px;
-  font-size:18px;
-  color:#000;
-  flex-shrink:0;
-}
-.space{width:140px;}
-.dark{width:48px;background:#9ca3af;}
-.enter{width:70px;background:#3b82f6;color:#fff;}
-.settings{width:48px;background:#111;color:#fff;}
-#panel{
-  position:absolute;
-  bottom:100%;
-  left:50%;
-  transform:translateX(-50%);
-  background:#111;
-  padding:10px;
-  border-radius:12px;
-  display:none;
-  width:220px;
-}
-</style>
-
-<button id="btnKeyboard">⌨️</button>
-<div id="keyboard"></div>
-
-<script>
-let currentInput=null;
-let shift=false;
-
-const kb=document.getElementById("keyboard");
-const btn=document.getElementById("btnKeyboard");
-
-document.addEventListener("focusin",(e)=>{
-  if(e.target.tagName==="INPUT" || e.target.tagName==="TEXTAREA"){
-    currentInput=e.target;
-    btn.style.display="block";
-  }
-});
-
-btn.onclick=()=>{
-  kb.style.display="block";
-  btn.style.display="none";
-  renderKeyboard();
-};
-
-function cerrarTeclado(){
-  kb.style.display="none";
-  btn.style.display="block";
-}
-
-function writeKey(k){
-  if(!currentInput) return;
-
-  const start = currentInput.selectionStart ?? currentInput.value.length;
-  const end = currentInput.selectionEnd ?? currentInput.value.length;
-
-  const value = currentInput.value;
-
-  currentInput.value =
-    value.substring(0, start) +
-    k +
-    value.substring(end);
-
-  const pos = start + k.length;
-  currentInput.setSelectionRange(pos, pos);
-
-  currentInput.dispatchEvent(new Event('input', {bubbles:true}));
-}
-
-function renderKeyboard(){
-  kb.innerHTML=`
-  <div class="kb-inner">
-    <div id="panel">
-      <input type="color" id="cKeys"><br>
-      <input type="color" id="cBg"><br>
-      <input type="color" id="cText">
-    </div>
-
-    <div class="row">
-      ${["1","2","3","4","5","6","7","8","9","0"]
-        .map(n => `<div class="key" data-k="${n}">${n}</div>`).join("")}
-    </div>
-  </div>`;
-
-  const wrap = kb.querySelector(".kb-inner");
-
-  ["qwertyuiop","asdfghjklñ","zxcvbnm"].forEach((r,i)=>{
-    let row=document.createElement("div");
-    row.className="row";
-
-    if(i===2) row.innerHTML += '<div class="key dark" data-k="SHIFT">↑</div>';
-
-    r.split("").forEach(k=>{
-      row.innerHTML += `<div class="key" data-k="${k}">${shift?k.toUpperCase():k}</div>`;
-    });
-
-    if(i===2) row.innerHTML += '<div class="key dark" data-k="DEL">⌫</div>';
-
-    wrap.appendChild(row);
-  });
-
-  let last=document.createElement("div");
-  last.className="row";
-  last.innerHTML = `
-    <div class="key dark" data-k="123">123</div>
-    <div class="key settings" data-k="SET">⚙️</div>
-    <div class="key space" data-k=" ">espacio</div>
-    <div class="key enter" data-k="CLOSE">Cerrar</div>
-  `;
-  wrap.appendChild(last);
-
-  bindPanel();
-}
-
-kb.addEventListener("click", e=>{
-  const k = e.target.dataset.k;
-  if(!k) return;
-
-  if(k==="SHIFT"){ shift=!shift; renderKeyboard(); return; }
-  if(k==="DEL"){
-    currentInput.value = currentInput.value.slice(0,-1);
-    return;
-  }
-  if(k==="CLOSE"){ cerrarTeclado(); currentInput.blur(); return; }
-  if(k==="SET"){
-    let p=document.getElementById("panel");
-    p.style.display=p.style.display==="block"?"none":"block";
-    return;
-  }
-
-  writeKey(k);
-});
-
-function bindPanel(){
-  document.getElementById("cKeys").oninput=e=>{
-    document.querySelectorAll("#keyboard .key").forEach(k=>k.style.background=e.target.value);
-  };
-  document.getElementById("cBg").oninput=e=>{
-    kb.style.background=e.target.value;
-  };
-  document.getElementById("cText").oninput=e=>{
-    document.querySelectorAll("#keyboard .key").forEach(k=>k.style.color=e.target.value);
-  };
-}
 </script>
 
 </body>

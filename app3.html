@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Revisiones v4.2</title>
+<title>Index v4.3 Teclado PRO</title>
 
 <style>
 body{
@@ -60,15 +60,28 @@ input{
   border-radius:10px;
   text-align:center;
   color:#000;
+  font-size:18px;
 }
 
 .space{flex:4;}
+.dark{background:#9ca3af;}
+.enter{background:#3b82f6;color:#fff;}
+
+#settings{
+  position:fixed;
+  top:20px;
+  right:20px;
+  background:#111;
+  padding:10px;
+  border-radius:10px;
+  z-index:9999;
+}
 </style>
 </head>
 
 <body>
 
-<h2>App prueba teclado</h2>
+<h2>App teclado integrada v4.3</h2>
 
 <input placeholder="Campo 1">
 <input placeholder="Campo 2">
@@ -76,11 +89,18 @@ input{
 
 <button id="btnKeyboard">⌨️</button>
 
+<div id="settings">
+  🎨 Color teclas<br>
+  <input type="color" id="colorKeys" value="#ffffff">
+  <br><br>
+  🎨 Fondo teclado<br>
+  <input type="color" id="colorBg" value="#d1d5db">
+</div>
+
 <div id="keyboard"></div>
 
 <script>
 let currentInput=null;
-let value="";
 let shift=false;
 
 const kb=document.getElementById("keyboard");
@@ -93,7 +113,7 @@ document.addEventListener("focusin",e=>{
 });
 
 document.getElementById("btnKeyboard").onclick=()=>{
-  kb.style.display="block";
+  kb.style.display = kb.style.display==="block" ? "none" : "block";
 };
 
 function render(){
@@ -104,7 +124,7 @@ function render(){
     row.className="row";
 
     if(i===2){
-      row.appendChild(createKey("↑"));
+      row.appendChild(createKey("↑","dark"));
     }
 
     r.split("").forEach(k=>{
@@ -112,7 +132,7 @@ function render(){
     });
 
     if(i===2){
-      row.appendChild(createKey("⌫"));
+      row.appendChild(createKey("⌫","dark"));
     }
 
     kb.appendChild(row);
@@ -121,9 +141,9 @@ function render(){
   let last=document.createElement("div");
   last.className="row";
 
-  last.appendChild(createKey("123"));
+  last.appendChild(createKey("123","dark"));
   last.appendChild(createKey("espacio","space"));
-  last.appendChild(createKey("OK"));
+  last.appendChild(createKey("OK","enter"));
 
   kb.appendChild(last);
 }
@@ -146,12 +166,22 @@ function press(k){
   }
 
   if(k==="⌫"){
-    currentInput.value=currentInput.value.slice(0,-1);
+    let start=currentInput.selectionStart;
+    let end=currentInput.selectionEnd;
+    let text=currentInput.value;
+
+    if(start>0){
+      currentInput.value =
+        text.substring(0,start-1) +
+        text.substring(end);
+
+      currentInput.setSelectionRange(start-1,start-1);
+    }
     return;
   }
 
   if(k==="espacio"){
-    currentInput.value+=" ";
+    insertText(" ");
     return;
   }
 
@@ -161,10 +191,33 @@ function press(k){
   }
 
   if(k.length===1){
-    currentInput.value+= shift?k.toUpperCase():k;
+    insertText(shift?k.toUpperCase():k);
     if(shift) shift=false;
   }
 }
+
+function insertText(char){
+  let start=currentInput.selectionStart;
+  let end=currentInput.selectionEnd;
+  let text=currentInput.value;
+
+  currentInput.value =
+    text.substring(0,start) +
+    char +
+    text.substring(end);
+
+  currentInput.setSelectionRange(start+1,start+1);
+}
+
+document.getElementById("colorKeys").oninput=(e)=>{
+  document.querySelectorAll(".key").forEach(k=>{
+    k.style.background=e.target.value;
+  });
+};
+
+document.getElementById("colorBg").oninput=(e)=>{
+  kb.style.background=e.target.value;
+};
 
 render();
 </script>

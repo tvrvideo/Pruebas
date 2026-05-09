@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Teclado iOS v2.1 FIX</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Teclado PRO v2.4</title>
 
 <style>
 body{
@@ -14,13 +14,30 @@ body{
   padding:20px;
 }
 
-input{
+/* INPUT CON CURSOR FAKE */
+.inputBox{
   width:100%;
   padding:14px;
-  font-size:18px;
+  font-size:20px;
   border-radius:10px;
-  border:none;
+  background:#fff;
+  color:#000;
   margin-bottom:20px;
+  position:relative;
+}
+
+.cursor{
+  display:inline-block;
+  width:2px;
+  height:22px;
+  background:#000;
+  margin-left:2px;
+  animation:blink 1s infinite;
+}
+
+@keyframes blink{
+  0%,50%,100%{opacity:1;}
+  25%,75%{opacity:0;}
 }
 
 .keyboard{
@@ -29,147 +46,133 @@ input{
   left:0;
   right:0;
   background:#d1d5db;
-  padding:8px;
+  padding:6px;
   display:none;
 }
 
 .row{
   display:flex;
   justify-content:center;
-  margin-bottom:6px;
+  margin-bottom:4px;
 }
 
 .key{
-  background:#ffffff;
-  color:#000000; /* FIX VISIBILIDAD */
-  margin:3px;
-  padding:12px 10px;
-  border-radius:6px;
-  font-size:16px;
-  min-width:32px;
-  text-align:center;
-}
-
-.key.dark{
-  background:#9ca3af;
+  background:#fff;
   color:#000;
-}
-
-.key.space{
+  margin:2px;
+  padding:10px 6px;
+  border-radius:6px;
+  font-size:18px; /* 🔥 letras más grandes */
+  min-width:28px;
+  text-align:center;
   flex:1;
 }
 
-.key.action{
-  background:#3b82f6;
-  color:#fff;
-}
+.key.small{flex:0.7;}
+.key.space{flex:3;}
+.key.action{background:#3b82f6;color:#fff;}
+.key.dark{background:#9ca3af;}
 </style>
 </head>
 
 <body>
 
-<h2>Teclado iOS FIX</h2>
+<h2>Teclado PRO v2.4</h2>
 
-<input id="input1" placeholder="Tocar para escribir" readonly onclick="openKeyboard(this)">
+<div class="inputBox" onclick="openKeyboard()">
+  <span id="text"></span><span class="cursor"></span>
+</div>
 
 <div class="keyboard" id="kb"></div>
 
 <script>
+let value = "";
+let shift=false;
+let caps=false;
+let lastShiftTime=0;
+let mode="letters";
 
-let current = null;
-let shift = false;
-let mode = "letters";
+const kb=document.getElementById("kb");
+const textEl=document.getElementById("text");
 
-const kb = document.getElementById("kb");
-
-function openKeyboard(el){
-  current = el;
-  kb.style.display = "block";
+function openKeyboard(){
+  kb.style.display="block";
   render();
 }
 
+function updateText(){
+  textEl.textContent=value;
+}
+
 function render(){
-  kb.innerHTML = "";
+  kb.innerHTML="";
 
-  let layout = [];
+  let layout = mode==="letters"
+    ? ["qwertyuiop","asdfghjklñ","zxcvbnm"]
+    : ["1234567890","-/:;()€&@",".,?!'"];
 
-  if(mode === "letters"){
-    layout = [
-      "qwertyuiop",
-      "asdfghjklñ",
-      "zxcvbnm"
-    ];
-  } else {
-    layout = [
-      "1234567890",
-      "-/:;()€&@",
-      ".,?!'"
-    ];
-  }
+  layout.forEach(r=>{
+    let row=document.createElement("div");
+    row.className="row";
 
-  layout.forEach(row=>{
-    let div = document.createElement("div");
-    div.className = "row";
-
-    row.split("").forEach(k=>{
-      let key = document.createElement("div");
-      key.className = "key";
-      key.textContent = shift ? k.toUpperCase() : k;
-      key.onclick = ()=> press(k);
-      div.appendChild(key);
+    r.split("").forEach(k=>{
+      let key=document.createElement("div");
+      key.className="key";
+      let char=(caps||shift)?k.toUpperCase():k;
+      key.textContent=char;
+      key.onclick=()=>press(k);
+      row.appendChild(key);
     });
 
-    kb.appendChild(div);
+    kb.appendChild(row);
   });
 
-  let last = document.createElement("div");
-  last.className = "row";
+  let last=document.createElement("div");
+  last.className="row";
 
-  let sh = document.createElement("div");
-  sh.className = "key dark";
-  sh.textContent = "↑";
-  sh.onclick = ()=>{ shift = !shift; render(); };
-  last.appendChild(sh);
-
-  let modeBtn = document.createElement("div");
-  modeBtn.className = "key dark";
-  modeBtn.textContent = mode === "letters" ? "123" : "ABC";
-  modeBtn.onclick = ()=>{
-    mode = mode === "letters" ? "num" : "letters";
-    render();
-  };
-  last.appendChild(modeBtn);
-
-  let space = document.createElement("div");
-  space.className = "key space";
-  space.textContent = "espacio";
-  space.onclick = ()=> press(" ");
-  last.appendChild(space);
-
-  let del = document.createElement("div");
-  del.className = "key dark";
-  del.textContent = "⌫";
-  del.onclick = ()=>{
-    if(current) current.value = current.value.slice(0,-1);
-  };
-  last.appendChild(del);
-
-  let ok = document.createElement("div");
-  ok.className = "key action";
-  ok.textContent = "OK";
-  ok.onclick = ()=>{
-    kb.style.display = "none";
-  };
-  last.appendChild(ok);
+  last.innerHTML=`
+    <div class="key dark small" onclick="handleShift()">↑</div>
+    <div class="key dark small" onclick="toggleMode()">${mode==="letters"?"123":"ABC"}</div>
+    <div class="key space" onclick="press(' ')">espacio</div>
+    <div class="key dark small" onclick="del()">⌫</div>
+    <div class="key action small" onclick="closeKB()">OK</div>
+  `;
 
   kb.appendChild(last);
 }
 
 function press(k){
-  if(!current) return;
-  let val = shift ? k.toUpperCase() : k;
-  current.value += val;
-  if(shift) shift = false;
+  let val=(caps||shift)?k.toUpperCase():k;
+  value+=val;
+  if(shift && !caps) shift=false;
+  updateText();
+  render();
+}
+
+function del(){
+  value=value.slice(0,-1);
+  updateText();
+}
+
+function handleShift(){
+  let now=Date.now();
+  if(now-lastShiftTime<300){
+    caps=!caps;
+    shift=false;
+  }else{
+    shift=!shift;
+  }
+  lastShiftTime=now;
+  render();
+}
+
+function toggleMode(){
+  mode=mode==="letters"?"num":"letters";
+  render();
+}
+
+function closeKB(){
+  kb.style.display="none";
 }
 
 </script>

@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>App v2.0 Teclado iOS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teclado iOS v2.1 FIX</title>
 
 <style>
 body{
@@ -40,18 +40,19 @@ input{
 }
 
 .key{
-  background:#fff;
+  background:#ffffff;
+  color:#000000; /* FIX VISIBILIDAD */
   margin:3px;
   padding:12px 10px;
   border-radius:6px;
   font-size:16px;
   min-width:32px;
   text-align:center;
-  box-shadow:0 1px 0 rgba(0,0,0,.3);
 }
 
 .key.dark{
   background:#9ca3af;
+  color:#000;
 }
 
 .key.space{
@@ -62,13 +63,12 @@ input{
   background:#3b82f6;
   color:#fff;
 }
-
 </style>
 </head>
 
 <body>
 
-<h2>Teclado estilo iOS</h2>
+<h2>Teclado iOS FIX</h2>
 
 <input id="input1" placeholder="Tocar para escribir" readonly onclick="openKeyboard(this)">
 
@@ -122,18 +122,15 @@ function render(){
     kb.appendChild(div);
   });
 
-  // fila especial
   let last = document.createElement("div");
   last.className = "row";
 
-  // shift
   let sh = document.createElement("div");
   sh.className = "key dark";
   sh.textContent = "↑";
   sh.onclick = ()=>{ shift = !shift; render(); };
   last.appendChild(sh);
 
-  // cambiar modo
   let modeBtn = document.createElement("div");
   modeBtn.className = "key dark";
   modeBtn.textContent = mode === "letters" ? "123" : "ABC";
@@ -143,14 +140,12 @@ function render(){
   };
   last.appendChild(modeBtn);
 
-  // espacio
   let space = document.createElement("div");
   space.className = "key space";
   space.textContent = "espacio";
   space.onclick = ()=> press(" ");
   last.appendChild(space);
 
-  // borrar
   let del = document.createElement("div");
   del.className = "key dark";
   del.textContent = "⌫";
@@ -159,7 +154,6 @@ function render(){
   };
   last.appendChild(del);
 
-  // enter
   let ok = document.createElement("div");
   ok.className = "key action";
   ok.textContent = "OK";
@@ -176,7 +170,6 @@ function press(k){
   let val = shift ? k.toUpperCase() : k;
   current.value += val;
   if(shift) shift = false;
-  render();
 }
 
 </script>

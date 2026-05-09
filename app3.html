@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Teclado PRO v2.7 (Copiar/Pegar)</title>
+<title>Revisiones v4.2</title>
 
 <style>
 body{
@@ -14,207 +14,159 @@ body{
   padding:20px;
 }
 
-.inputBox{
+input{
   width:100%;
   padding:14px;
-  font-size:20px;
   border-radius:10px;
-  background:#fff;
-  color:#000;
-  margin-bottom:20px;
-  min-height:28px;
+  border:none;
+  margin-bottom:15px;
+  font-size:16px;
 }
 
-.keyboard{
+#btnKeyboard{
+  position:fixed;
+  bottom:100px;
+  right:20px;
+  z-index:9999;
+  padding:12px;
+  border-radius:12px;
+  background:#0E4C92;
+  color:#fff;
+  font-weight:bold;
+  display:none;
+}
+
+#keyboard{
   position:fixed;
   bottom:0;
   left:0;
   right:0;
   background:#d1d5db;
-  padding:6px;
+  padding:8px;
   display:none;
 }
 
 .row{
   display:flex;
   justify-content:center;
-  margin-bottom:4px;
+  margin-bottom:6px;
 }
 
 .key{
-  background:#fff;
-  color:#000;
-  margin:2px;
-  padding:10px 6px;
-  border-radius:6px;
-  font-size:18px;
   flex:1;
+  margin:3px;
+  padding:14px;
+  background:#fff;
+  border-radius:10px;
   text-align:center;
+  color:#000;
 }
 
-.key.small{flex:0.7;}
-.key.space{flex:3;}
-.key.dark{background:#9ca3af;}
-.key.action{background:#3b82f6;color:#fff;}
-.key.tool{background:#10b981;color:#fff;}
+.space{flex:4;}
 </style>
 </head>
 
 <body>
 
-<h2>Teclado PRO v2.7</h2>
+<h2>App prueba teclado</h2>
 
-<div class="inputBox" id="inputBox"></div>
+<input placeholder="Campo 1">
+<input placeholder="Campo 2">
+<input placeholder="Campo 3">
 
-<div class="keyboard" id="kb"></div>
+<button id="btnKeyboard">⌨️</button>
+
+<div id="keyboard"></div>
 
 <script>
-let value = "";
-let cursorPos = 0;
-
+let currentInput=null;
+let value="";
 let shift=false;
-let caps=false;
-let lastShiftTime=0;
-let mode="letters";
 
-const kb=document.getElementById("kb");
-const inputBox=document.getElementById("inputBox");
+const kb=document.getElementById("keyboard");
 
-// ===== render texto
-function updateText(){
-  const before = value.slice(0,cursorPos);
-  const after = value.slice(cursorPos);
-  inputBox.innerHTML = before + '<span style="display:inline-block;width:2px;height:20px;background:#000;"></span>' + after;
-}
+document.addEventListener("focusin",e=>{
+  if(e.target.tagName==="INPUT"){
+    currentInput=e.target;
+    document.getElementById("btnKeyboard").style.display="block";
+  }
+});
 
-// ===== abrir teclado
-inputBox.onclick = function(){
+document.getElementById("btnKeyboard").onclick=()=>{
   kb.style.display="block";
-  render();
-  updateText();
 };
 
-// ===== teclado
 function render(){
   kb.innerHTML="";
 
-  let layout = mode==="letters"
-    ? ["qwertyuiop","asdfghjklñ","zxcvbnm"]
-    : ["1234567890","-/:;()€&@",".,?!'"];
-
-  layout.forEach(r=>{
+  ["qwertyuiop","asdfghjklñ","zxcvbnm"].forEach((r,i)=>{
     let row=document.createElement("div");
     row.className="row";
 
+    if(i===2){
+      row.appendChild(createKey("↑"));
+    }
+
     r.split("").forEach(k=>{
-      let key=document.createElement("div");
-      key.className="key";
-      let char=(caps||shift)?k.toUpperCase():k;
-      key.textContent=char;
-      key.onclick=()=>press(k);
-      row.appendChild(key);
+      row.appendChild(createKey(k));
     });
+
+    if(i===2){
+      row.appendChild(createKey("⌫"));
+    }
 
     kb.appendChild(row);
   });
 
-  // fila acciones
   let last=document.createElement("div");
   last.className="row";
 
-  last.innerHTML=`
-    <div class="key dark small" onclick="handleShift()">↑</div>
-    <div class="key dark small" onclick="toggleMode()">${mode==="letters"?"123":"ABC"}</div>
-    <div class="key space" onclick="press(' ')">espacio</div>
-    <div class="key dark small" onclick="del()">⌫</div>
-    <div class="key action small" onclick="closeKB()">OK</div>
-  `;
+  last.appendChild(createKey("123"));
+  last.appendChild(createKey("espacio","space"));
+  last.appendChild(createKey("OK"));
 
   kb.appendChild(last);
-
-  // herramientas copiar pegar
-  let tools=document.createElement("div");
-  tools.className="row";
-
-  tools.innerHTML=`
-    <div class="key tool" onclick="copyText()">Copiar</div>
-    <div class="key tool" onclick="pasteText()">Pegar</div>
-    <div class="key tool" onclick="clearText()">Clear</div>
-  `;
-
-  kb.appendChild(tools);
 }
 
-// ===== acciones
+function createKey(k,cls=""){
+  let key=document.createElement("div");
+  key.className="key "+cls;
+  key.textContent=shift?k.toUpperCase():k;
+  key.onclick=()=>press(k);
+  return key;
+}
+
 function press(k){
-  let char=(caps||shift)?k.toUpperCase():k;
-  value = value.slice(0,cursorPos) + char + value.slice(cursorPos);
-  cursorPos++;
+  if(!currentInput) return;
 
-  if(shift && !caps) shift=false;
-
-  updateText();
-  render();
-}
-
-function del(){
-  if(cursorPos===0) return;
-  value = value.slice(0,cursorPos-1) + value.slice(cursorPos);
-  cursorPos--;
-  updateText();
-}
-
-function handleShift(){
-  let now=Date.now();
-  if(now-lastShiftTime<300){
-    caps=!caps;
-    shift=false;
-  }else{
+  if(k==="↑"){
     shift=!shift;
+    render();
+    return;
   }
-  lastShiftTime=now;
-  render();
+
+  if(k==="⌫"){
+    currentInput.value=currentInput.value.slice(0,-1);
+    return;
+  }
+
+  if(k==="espacio"){
+    currentInput.value+=" ";
+    return;
+  }
+
+  if(k==="OK"){
+    kb.style.display="none";
+    return;
+  }
+
+  if(k.length===1){
+    currentInput.value+= shift?k.toUpperCase():k;
+    if(shift) shift=false;
+  }
 }
 
-function toggleMode(){
-  mode=mode==="letters"?"num":"letters";
-  render();
-}
-
-function closeKB(){
-  kb.style.display="none";
-}
-
-// ===== copiar pegar
-function copyText(){
-  const temp=document.createElement("textarea");
-  temp.value=value;
-  document.body.appendChild(temp);
-  temp.select();
-  document.execCommand("copy");
-  document.body.removeChild(temp);
-}
-
-function pasteText(){
-  const temp=document.createElement("textarea");
-  document.body.appendChild(temp);
-  temp.focus();
-  document.execCommand("paste");
-  value += temp.value;
-  cursorPos=value.length;
-  document.body.removeChild(temp);
-  updateText();
-}
-
-function clearText(){
-  value="";
-  cursorPos=0;
-  updateText();
-}
-
-// init
-updateText();
-
+render();
 </script>
 
 </body>

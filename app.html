@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Language" content="es-ES">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Revisiones v4.1.2</title>
+<title>Revisiones v4.2</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0E4C92">
 <meta name="apple-mobile-web-app-title" content="Talleres Lista">
@@ -156,6 +156,7 @@ button.danger{background:var(--danger);}
 }
 .vehicleForm .vehicleLine3{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .vehicleForm .vehicleLine2{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.vehicleForm .vehicleLine1{ grid-template-columns: 1fr; }
 .vehicleForm .field,
 .vehicleForm .field.small{
   flex:initial;
@@ -348,7 +349,7 @@ body.theme-beige .vehicleCard.matchTop{
 .workCard.open{ background:rgba(10,19,36,.88); }
 .workHead{
   min-height:58px;
-  padding:14px 46px 14px 16px;
+  padding:14px 16px 14px 52px;
   background:linear-gradient(90deg, rgba(14,76,146,.62), rgba(14,76,146,.30));
   display:flex;
   align-items:center;
@@ -378,7 +379,8 @@ body.theme-beige .vehicleCard.matchTop{
 .workBody{ display:none; padding:14px 12px 16px; }
 .workCard.open .workBody{ display:block; }
 .workTop,
-.workGrid3{
+.workGrid3,
+.workGrid1{
   display:grid;
   grid-template-columns:repeat(3, minmax(0, 1fr));
   gap:8px;
@@ -386,7 +388,10 @@ body.theme-beige .vehicleCard.matchTop{
   margin-top:0;
 }
 .workTop + .workTop,
-.workGrid3 + .workGrid3{ margin-top:12px; }
+.workGrid3 + .workGrid3,
+.workGrid1 + .workGrid3,
+.workGrid3 + .workGrid1{ margin-top:12px; }
+.workGrid1{ grid-template-columns:1fr; margin-top:0; }
 .workCard .field{
   flex:initial;
   min-width:0;
@@ -450,7 +455,8 @@ body.theme-beige .vehicleCard.matchTop{
 @media (max-width:430px){
   .workBody{ padding-left:10px; padding-right:10px; }
   .workTop,
-  .workGrid3{ gap:6px; }
+  .workGrid3,
+  .workGrid1{ gap:6px; }
   .workCard input,
   .workCard textarea{ padding-left:6px; padding-right:6px; }
 }
@@ -479,20 +485,21 @@ body.theme-beige .vehicleCard.matchTop{
 .trashBtn{
   position:absolute;
   top:14px;
-  right:10px;
+  left:10px;
   width:34px;
   height:34px;
   border-radius:10px;
   border:1px solid rgba(198,40,40,.55);
   background: rgba(198,40,40,.22);
   color:#fff;
-  display:flex;
+  display:none;
   align-items:center;
   justify-content:center;
   font-size: 16px;
   padding:0;
   opacity: .9;
 }
+.workCard.open .trashBtn{ display:flex; }
 .trashBtn:active{ background: rgba(198,40,40,.35); opacity:1; }
 
 .sectionTitle{margin-top:18px;font-weight:900;font-size: calc(22px * var(--fontScale));}
@@ -863,6 +870,55 @@ input.estado-bad{
 }
 
 
+/* v4.2 - Modal seguro para eliminar vehículo */
+.deleteVehicleModal{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
+  background:rgba(0,0,0,.68);
+}
+.deleteVehicleModal.open{ display:flex; }
+.deleteVehicleCard{
+  width:min(520px, 100%);
+  background:var(--card);
+  color:var(--text);
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:20px;
+  box-shadow:0 18px 48px rgba(0,0,0,.45);
+}
+.deleteVehicleTitle{
+  font-size:calc(22px * var(--fontScale));
+  font-weight:900;
+  margin:0 0 10px 0;
+}
+.deleteVehicleText{
+  color:var(--muted);
+  font-size:calc(15px * var(--fontScale));
+  line-height:1.35;
+  margin:0 0 16px 0;
+}
+.deleteVehicleActions{
+  display:flex;
+  gap:10px;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+}
+.deleteVehicleActions button{ min-width:120px; }
+.deleteVehicleInlineBox{
+  margin-top:18px;
+  padding-top:14px;
+  border-top:1px solid var(--line);
+}
+.deleteVehicleInlineBox .danger{
+  width:100%;
+  min-height:54px;
+}
+
 /* v4.1.2 iOS18 FIX */
 input, textarea, select {
   font-size: 16px !important;
@@ -870,6 +926,9 @@ input, textarea, select {
   user-select: text !important;
   touch-action: auto !important;
 }
+
+/* v4.1.4 - Cliente y domicilio en líneas separadas a ancho completo */
+.vehicleForm .vehicleLine2 > .field:only-child{ grid-column:1 / -1; }
 
 </style>
 </head>
@@ -879,7 +938,7 @@ input, textarea, select {
 <header id="appHeader">
   <div class="titleblock">
     <h1>Revisiones</h1>
-    <div class="ver">v4.1.2</div>
+    <div class="ver">v4.2</div>
   </div>
 
   <div class="logoBox" id="logoBox" title="Pulsa para cambiar el logo">
@@ -915,7 +974,7 @@ input, textarea, select {
   <div class="inner">
     <button class="primary" id="backFromDetail" style="min-width:110px;">Volver</button>
     <div style="font-weight:900; font-size: calc(18px * var(--fontScale));">Vehículo</div>
-    <button class="danger" id="btnDeleteVehicle" style="min-width:110px;">Eliminar</button>
+    <button class="danger" id="btnDeleteVehicle" type="button" data-action="delete-current-vehicle" onclick="window.__talleresAskDeleteVehicle && window.__talleresAskDeleteVehicle(event)" style="min-width:110px;">Eliminar</button>
   </div>
 </div>
 
@@ -971,11 +1030,13 @@ input, textarea, select {
           <input id="dKm" inputmode="numeric" autocomplete="off" placeholder="0">
         </div>
       </div>
-      <div class="row vehicleLine3">
+      <div class="row vehicleLine1">
         <div class="field">
           <label>Vehículo</label>
           <input id="dVehicle" autocomplete="off">
         </div>
+      </div>
+      <div class="row vehicleLine2">
         <div class="field">
           <label>VIN</label>
           <input id="dVin" autocomplete="off" autocapitalize="characters" spellcheck="false">
@@ -990,6 +1051,9 @@ input, textarea, select {
           <label>Cliente</label>
           <input id="dOwner" autocomplete="off">
         </div>
+      </div>
+
+      <div class="row vehicleLine2">
         <div class="field">
           <label>Domicilio</label>
           <input id="dAddress" autocomplete="street-address">
@@ -1004,6 +1068,11 @@ input, textarea, select {
           <label>Teléfono</label>
           <input id="dPhone" inputmode="tel" autocomplete="tel">
         </div>
+      </div>
+
+      <div class="deleteVehicleInlineBox">
+        <button class="danger" id="btnDeleteVehicleInline" type="button" data-action="delete-current-vehicle" onclick="window.__talleresAskDeleteVehicle && window.__talleresAskDeleteVehicle(event)">Eliminar este vehículo</button>
+        <p class="hint">Antes de borrar se guarda una copia interna de seguridad.</p>
       </div>
 
       <div class="sectionTitle">Trabajos</div>
@@ -1039,11 +1108,13 @@ input, textarea, select {
           <input id="aKm" inputmode="numeric" autocomplete="off" placeholder="0">
         </div>
       </div>
-      <div class="row vehicleLine3">
+      <div class="row vehicleLine1">
         <div class="field">
           <label>Vehículo</label>
           <input id="aVehicle" autocomplete="off">
         </div>
+      </div>
+      <div class="row vehicleLine2">
         <div class="field">
           <label>VIN</label>
           <input id="aVin" autocomplete="off" autocapitalize="characters" spellcheck="false">
@@ -1058,6 +1129,9 @@ input, textarea, select {
           <label>Cliente</label>
           <input id="aOwner" autocomplete="off">
         </div>
+      </div>
+
+      <div class="row vehicleLine2">
         <div class="field">
           <label>Domicilio</label>
           <input id="aAddress" autocomplete="street-address">
@@ -2429,25 +2503,8 @@ function updateDayDetail(dateStr, filter = &#x27;&#x27;) {
         selectedColor = &#x27;#ffffff&#x27;;
         currentView = &#x27;list&#x27;;
 
-        // Borrado duro de almacenamiento (más fiable en iOS/WKWebView)
-        let cleared = false;
-        try {
-            localStorage.clear();
-            cleared = true;
-        } catch(e) {}
-
-        // Fallback: borrar clave por clave si clear() falla
-        if (!cleared) {
-            try {
-                const keys = [];
-                for (let i = 0; i &lt; localStorage.length; i++) keys.push(localStorage.key(i));
-                for (let j = 0; j &lt; keys.length; j++) {
-                    try { localStorage.removeItem(keys[j]); } catch(e) {}
-                }
-            } catch(e) {}
-        }
-
-        // Deja el storage en un estado estable para el arranque
+        // Borrado seguro: solo limpia las notas, nunca todo localStorage.
+        // Importante: este iframe comparte almacenamiento con Revisiones.
         try { localStorage.setItem(STORAGE_KEY, &#x27;[]&#x27;); } catch(e) {}
 
         // Limpia UI
@@ -2598,10 +2655,11 @@ document.getElementById(&#x27;btnExportMenu&#x27;).addEventListener(&#x27;click&
       <p class="hint" style="margin-top:0;">Copia de seguridad en formato <b>.json</b>.</p>
       <div class="row">
         <button class="primary" id="btnExport">Exportar copia de seguridad</button>
-        <button class="primary" id="btnRestore">Restaurar copia de seguridad</button>
+        <button class="primary" id="btnRestore">Importar/Fusionar copia de seguridad</button>
       </div>
       <input type="file" id="restorePicker" accept="application/json,.json">
-      <p class="hint">Al restaurar se reemplazarán los datos actuales por los del archivo.</p>
+      <p class="hint">Al importar se fusionarán los vehículos: se añaden los que falten y, si un vehículo existe en ambos móviles, se conserva el dato más reciente. No se borra lo que ya tengas.</p>
+      <p class="hint" id="backupStatus" style="font-weight:900;"></p>
     </div>
   
       <hr style="margin:20px 0; opacity:.2;">
@@ -2665,7 +2723,7 @@ document.getElementById(&#x27;btnExportMenu&#x27;).addEventListener(&#x27;click&
   const LOGO_KEY = 'talleres_lista_logo_v28';
   const SAMPLE_FLAG = 'talleres_lista_sample_created_v1';
 
-  const DEFAULT_WORKS = ['Aceite','Filtros','Neumáticos','Frenos','Aceite caja cambios','Distribución','Correas Accesorios','Batería'];
+  const DEFAULT_WORKS = ['Aceite','Filtros','Neumáticos','Frenos','ITV','Aceite caja cambios','Distribución','Correas Accesorios','Batería'];
 
   const $ = (id) => document.getElementById(id);
 
@@ -2674,6 +2732,7 @@ document.getElementById(&#x27;btnExportMenu&#x27;).addEventListener(&#x27;click&
   const listView = $('listView');
   const addView = $('addView');
   const settingsView = $('settingsView');
+  const backupStatus = $('backupStatus');
   const notesView = $('notesView');
   const detailView = $('detailView');
 
@@ -2932,8 +2991,6 @@ const daysUntil = (isoDate) => {
         addDateAlert('Filtros · Aceite', w.filtroAceiteProx);
         addDateAlert('Filtros · Aire', w.filtroAireProx);
         addDateAlert('Filtros · Gasoil', w.filtroGasoilProx);
-        addDateAlert('Filtros · Polen', w.filtroPolenProx);
-        addDateAlert('Filtros · Habitáculo', w.filtroHabitaculoProx);
       }else if(key === 'frenos'){
         addDateAlert('Frenos · Líquido', w.frenoLiquidoProxFecha);
       }else if(key === 'distribución'){
@@ -3063,9 +3120,17 @@ const daysUntil = (isoDate) => {
     return w;
   };
 
+  const makeVehicleId = () => {
+    try{
+      if(window.crypto && crypto.randomUUID) return 'v_' + crypto.randomUUID();
+    }catch(e){}
+    return 'v_' + Math.random().toString(16).slice(2) + Date.now().toString(16);
+  };
+
   const createVehicle = (example=false) => ({
-    id: 'v_' + Math.random().toString(16).slice(2) + Date.now().toString(16),
+    id: makeVehicleId(),
     created: example ? todayISO() : '',
+    updatedAt: Date.now(),
     plate: example ? '0000AAA' : '',
     km: '',
     vehicle: example ? 'Audi A3' : '',
@@ -3080,15 +3145,78 @@ const daysUntil = (isoDate) => {
     works: emptyWorksFromList(DEFAULT_WORKS)
   });
 
-  const loadDB = () => {
-    try {
-      const raw = localStorage.getItem(STORAGE);
-      const obj = raw ? JSON.parse(raw) : null;
-      if(!obj || !Array.isArray(obj.vehicles)) return { vehicles: [] };
-      return obj;
-    } catch(e) {
-      return { vehicles: [] };
+  const getVehicleKey = (v) => {
+    const id = (v && v.id != null) ? String(v.id).trim() : '';
+    if(id) return 'id:' + id;
+    const plate = String((v && v.plate) || '').trim().toUpperCase();
+    const owner = String((v && v.owner) || '').trim().toLowerCase();
+    const vin = String((v && v.vin) || '').trim().toUpperCase();
+    if(vin) return 'vin:' + vin;
+    return 'plate:' + plate + '|owner:' + owner;
+  };
+
+  const markUpdated = (v) => {
+    if(v) v.updatedAt = Date.now();
+  };
+
+  const parsePossibleDB = (raw) => {
+    try{
+      if(!raw) return null;
+      let obj = JSON.parse(raw);
+      if(typeof obj === 'string'){
+        try{ obj = JSON.parse(obj); }catch(e){}
+      }
+      if(obj && obj.data && Array.isArray(obj.data.vehicles)) return obj.data;
+      if(obj && Array.isArray(obj.vehicles)) return obj;
+      return null;
+    }catch(e){
+      return null;
     }
+  };
+
+  const findBestStoredDB = () => {
+    let best = null;
+    try{
+      for(let i = 0; i < localStorage.length; i++){
+        const key = localStorage.key(i) || '';
+        if(!key.startsWith('talleres_lista_db_') &&
+           !key.startsWith('talleres_lista_pre_migracion_') &&
+           !key.startsWith('talleres_lista_pre_importacion_')) continue;
+
+        const candidate = parsePossibleDB(localStorage.getItem(key));
+        if(!candidate || !Array.isArray(candidate.vehicles)) continue;
+
+        const count = candidate.vehicles.length;
+        const latest = candidate.vehicles.reduce((m, v) => Math.max(m, Number(v && v.updatedAt) || 0), 0);
+        const score = (count * 10000000000000) + latest;
+
+        if(!best || score > best.score){
+          best = { key, db: candidate, count, latest, score };
+        }
+      }
+    }catch(e){}
+    return best;
+  };
+
+  const loadDB = () => {
+    const main = parsePossibleDB(localStorage.getItem(STORAGE));
+    const best = findBestStoredDB();
+
+    if(main && Array.isArray(main.vehicles) && main.vehicles.length > 0){
+      return main;
+    }
+
+    if(best && best.db && Array.isArray(best.db.vehicles) && best.db.vehicles.length > 0){
+      try{
+        localStorage.setItem('talleres_lista_rescate_arranque_' + Date.now(), localStorage.getItem(STORAGE) || '');
+        localStorage.setItem(STORAGE, JSON.stringify(best.db));
+        window.__TALLERES_RECOVERY_MSG__ = 'Datos recuperados desde copia interna: ' + best.key + ' (' + best.count + ' vehículos).';
+      }catch(e){}
+      return best.db;
+    }
+
+    if(main && Array.isArray(main.vehicles)) return main;
+    return { vehicles: [] };
   };
 
   const db = loadDB();
@@ -3096,7 +3224,11 @@ const daysUntil = (isoDate) => {
   const normalizeDB = () => {
     try{
       if(!Array.isArray(db.vehicles)) db.vehicles = [];
+      let changed = false;
       db.vehicles.forEach(v => {
+        if(!v.id){ v.id = makeVehicleId(); changed = true; }
+        else if(typeof v.id !== 'string'){ v.id = String(v.id); changed = true; }
+        if(typeof v.updatedAt !== 'number' || !isFinite(v.updatedAt)){ v.updatedAt = Date.now(); changed = true; }
         if(typeof v.km !== 'string') v.km = (v.km == null ? '' : String(v.km));
         if(typeof v.vehicle !== 'string') v.vehicle = (v.vehicle == null ? '' : String(v.vehicle));
         if(typeof v.vin !== 'string') v.vin = (v.vin == null ? '' : String(v.vin));
@@ -3166,19 +3298,33 @@ const daysUntil = (isoDate) => {
             if(!w.neuRepuestoNombre) w.neuRepuestoNombre = 'Repuesto';
           }
           if(name.trim && name.trim().toLowerCase() === 'frenos'){
-            ['frenoDelNombre','frenoDelRef','frenoDelEstado','frenoTrasNombre','frenoTrasRef','frenoTrasEstado','frenoLiquidoNombre','frenoLiquidoFecha','frenoLiquidoProxFecha'].forEach(k => {
+            ['frenoDelNombre','frenoDelRef','frenoDelEstado','frenoTrasNombre','frenoTrasRef','frenoTrasEstado','frenoDiscoDelNombre','frenoDiscoDelRef','frenoDiscoDelEstado','frenoDiscoTrasNombre','frenoDiscoTrasRef','frenoDiscoTrasEstado','frenoLiquidoNombre','frenoLiquidoFecha','frenoLiquidoProxFecha'].forEach(k => {
               if(typeof w[k] !== 'string') w[k] = (w[k] == null ? '' : String(w[k]));
             });
             if(!w.frenoDelNombre) w.frenoDelNombre = 'Delantero';
             if(!w.frenoTrasNombre) w.frenoTrasNombre = 'Trasero';
+            if(!w.frenoDiscoDelNombre) w.frenoDiscoDelNombre = 'Delanteros';
+            if(!w.frenoDiscoTrasNombre) w.frenoDiscoTrasNombre = 'Traseros';
             if(!w.frenoLiquidoNombre) w.frenoLiquidoNombre = 'Líquido';
           }
           v.works[name] = w;
         });
       });
+      if(changed){
+        try{ localStorage.setItem('talleres_lista_pre_migracion_' + Date.now(), localStorage.getItem(STORAGE) || ''); }catch(e){}
+        try{ localStorage.setItem(STORAGE, JSON.stringify(db)); }catch(e){}
+      }
     }catch(e){}
   };
   normalizeDB();
+  try{
+    if(window.__TALLERES_RECOVERY_MSG__){
+      setTimeout(() => {
+        if(backupStatus) backupStatus.textContent = window.__TALLERES_RECOVERY_MSG__;
+        alert(window.__TALLERES_RECOVERY_MSG__);
+      }, 400);
+    }
+  }catch(e){}
 
   const saveDB = () => localStorage.setItem(STORAGE, JSON.stringify(db));
 
@@ -3512,6 +3658,11 @@ const PREF_KEY = 'talleres_lista_prefs_v1_6';
 
     const oldFilterNames = ['Filtro aceite','Filtro aire','Filtro combustible','Filtro habitáculo'];
     const hiddenWorks = Array.isArray(worksObj.__hidden__) ? worksObj.__hidden__ : [];
+    DEFAULT_WORKS.forEach(n => {
+      if(!worksObj[n] && !hiddenWorks.includes(n)){
+        worksObj[n] = {done:'', next:'', km:'', notes:''};
+      }
+    });
     const existingNames = Object.keys(worksObj).filter(n => n !== '__hidden__');
     const renderNames = [];
     DEFAULT_WORKS.forEach(n => {
@@ -3541,6 +3692,7 @@ const PREF_KEY = 'talleres_lista_prefs_v1_6';
       const isFiltros = name.trim().toLowerCase() === 'filtros';
       const isNeumaticos = name.trim().toLowerCase() === 'neumáticos';
       const isFrenos = name.trim().toLowerCase() === 'frenos';
+      const isITV = name.trim().toLowerCase() === 'itv';
       const isDistribucion = name.trim().toLowerCase() === 'distribución';
 const isBateria = name.trim().toLowerCase().includes('bater');
 const isCorreas = name.trim().toLowerCase().includes('correas');
@@ -3637,25 +3789,11 @@ const isCorreas = name.trim().toLowerCase().includes('correas');
             <input data-name="${safeName}" data-k="filtroPolenRef" value="${escAttr(w.filtroPolenRef || '')}" autocomplete="off">
           </div>
           <div class="field">
-            <label>Próx Cambio</label>
-            <input type="date" lang="es-ES" data-name="${safeName}" data-k="filtroPolenProx" value="${escAttr(w.filtroPolenProx || '')}">
+            <label>Próx Km</label>
+            <input inputmode="numeric" data-name="${safeName}" data-k="filtroPolenProx" value="${escAttr(w.filtroPolenProx || '')}" placeholder="0">
           </div>
         </div>
 
-        <div class="workGrid3">
-          <div class="field">
-            <label>Filtro</label>
-            <div class="filterNameBox"><input class="filterNameInput" data-name="${safeName}" data-k="filtroHabitaculoNombre" value="${escAttr(w.filtroHabitaculoNombre || 'Habitáculo')}" placeholder="Habitáculo" autocomplete="off"></div>
-          </div>
-          <div class="field">
-            <label>Ref</label>
-            <input data-name="${safeName}" data-k="filtroHabitaculoRef" value="${escAttr(w.filtroHabitaculoRef || '')}" autocomplete="off">
-          </div>
-          <div class="field">
-            <label>Próx Cambio</label>
-            <input type="date" lang="es-ES" data-name="${safeName}" data-k="filtroHabitaculoProx" value="${escAttr(w.filtroHabitaculoProx || '')}">
-          </div>
-        </div>
 
         <div class="notesBox">
           <label>Notas</label>
@@ -3666,7 +3804,7 @@ const isCorreas = name.trim().toLowerCase().includes('correas');
       const frenosBody = `
         <div class="workGrid3">
           <div class="field">
-            <label>Freno</label>
+            <label>Pastillas</label>
             <div class="filterNameBox"><input class="filterNameInput" data-name="${safeName}" data-k="frenoDelNombre" value="${escAttr(w.frenoDelNombre || 'Delantero')}" placeholder="Delantero" autocomplete="off"></div>
           </div>
           <div class="field">
@@ -3681,7 +3819,7 @@ const isCorreas = name.trim().toLowerCase().includes('correas');
 
         <div class="workGrid3">
           <div class="field">
-            <label>Freno</label>
+            <label>Pastillas</label>
             <div class="filterNameBox"><input class="filterNameInput" data-name="${safeName}" data-k="frenoTrasNombre" value="${escAttr(w.frenoTrasNombre || 'Trasero')}" placeholder="Trasero" autocomplete="off"></div>
           </div>
           <div class="field">
@@ -3696,7 +3834,37 @@ const isCorreas = name.trim().toLowerCase().includes('correas');
 
         <div class="workGrid3">
           <div class="field">
-            <label>Freno</label>
+            <label>Discos</label>
+            <div class="filterNameBox"><input class="filterNameInput" data-name="${safeName}" data-k="frenoDiscoDelNombre" value="${escAttr(w.frenoDiscoDelNombre || 'Delanteros')}" placeholder="Delanteros" autocomplete="off"></div>
+          </div>
+          <div class="field">
+            <label>Ref</label>
+            <input data-name="${safeName}" data-k="frenoDiscoDelRef" value="${escAttr(w.frenoDiscoDelRef || '')}" autocomplete="off">
+          </div>
+          <div class="field">
+            <label>Estado</label>
+            <input data-name="${safeName}" data-k="frenoDiscoDelEstado" value="${escAttr(w.frenoDiscoDelEstado || '')}" inputmode="decimal" placeholder="%">
+          </div>
+        </div>
+
+        <div class="workGrid3">
+          <div class="field">
+            <label>Discos</label>
+            <div class="filterNameBox"><input class="filterNameInput" data-name="${safeName}" data-k="frenoDiscoTrasNombre" value="${escAttr(w.frenoDiscoTrasNombre || 'Traseros')}" placeholder="Traseros" autocomplete="off"></div>
+          </div>
+          <div class="field">
+            <label>Ref</label>
+            <input data-name="${safeName}" data-k="frenoDiscoTrasRef" value="${escAttr(w.frenoDiscoTrasRef || '')}" autocomplete="off">
+          </div>
+          <div class="field">
+            <label>Estado</label>
+            <input data-name="${safeName}" data-k="frenoDiscoTrasEstado" value="${escAttr(w.frenoDiscoTrasEstado || '')}" inputmode="decimal" placeholder="%">
+          </div>
+        </div>
+
+        <div class="workGrid3">
+          <div class="field">
+            <label>Frenos</label>
             <div class="filterNameBox"><input class="filterNameInput" data-name="${safeName}" data-k="frenoLiquidoNombre" value="${escAttr(w.frenoLiquidoNombre || 'Líquido')}" placeholder="Líquido" autocomplete="off"></div>
           </div>
           <div class="field">
@@ -3716,6 +3884,21 @@ const isCorreas = name.trim().toLowerCase().includes('correas');
       `;
 
       
+      const itvBody = `
+        <div class="workGrid3">
+          <div class="field">
+            <label>Próxima revisión ITV</label>
+            <input class="nextInput" type="date" lang="es-ES" data-name="${safeName}" data-k="itvProxima" value="${escAttr(w.itvProxima || w.next || '')}">
+          </div>
+        </div>
+
+        <div class="notesBox">
+          <label>Notas</label>
+          <textarea data-name="${safeName}" data-k="notes" placeholder="Notas">${escText(w.notes || '')}</textarea>
+        </div>
+      `;
+
+
       const distribucionBody = `
         <div class="workGrid3">
           <div class="field">
@@ -3755,6 +3938,13 @@ const isCorreas = name.trim().toLowerCase().includes('correas');
 
 
       const neumaticosBody = `
+        <div class="workGrid1">
+          <div class="field">
+            <label>Medida</label>
+            <input data-name="${safeName}" data-k="neuMedida" value="${escAttr(w.neuMedida || '')}" autocomplete="off" placeholder="Ej: 205/55 R16">
+          </div>
+        </div>
+
         <div class="workGrid3">
           <div class="field">
             <label>Ruedas</label>
@@ -3768,18 +3958,6 @@ const isCorreas = name.trim().toLowerCase().includes('correas');
             <label>Traseras %</label>
             <input data-name="${safeName}" data-k="neuVehiculoTras" value="${escAttr(w.neuVehiculoTras || '')}" inputmode="decimal">
           </div>
-        </div>
-
-        <div class="workGrid3">
-          <div class="field">
-            <label>Rueda</label>
-            <div class="filterNameBox"><input class="filterNameInput" data-name="${safeName}" data-k="neuRepuestoNombre" value="${escAttr(w.neuRepuestoNombre || 'Repuesto')}" autocomplete="off"></div>
-          </div>
-          <div class="field">
-            <label>Estado %</label>
-            <input data-name="${safeName}" data-k="neuRepuestoEstado" value="${escAttr(w.neuRepuestoEstado || '')}" inputmode="decimal">
-          </div>
-          <div></div>
         </div>
 
         <div class="notesBox">
@@ -3901,7 +4079,7 @@ const genericBody = `
         </div>
         <button class="trashBtn" data-del="${safeName}" type="button" aria-label="Eliminar ${safeName}" title="Eliminar">🗑️</button>
         <div class="workBody">
-          ${isAuxiliar ? auxBody : (isAceite ? aceiteBody : (isFiltros ? filtrosBody : (isNeumaticos ? neumaticosBody : (isFrenos ? frenosBody : (isCorreas ? correasBody : (isBateria ? bateriaBody : (isDistribucion ? distribucionBody : genericBody)))))))}
+          ${isAuxiliar ? auxBody : (isAceite ? aceiteBody : (isFiltros ? filtrosBody : (isNeumaticos ? neumaticosBody : (isFrenos ? frenosBody : (isITV ? itvBody : (isCorreas ? correasBody : (isBateria ? bateriaBody : (isDistribucion ? distribucionBody : genericBody))))))))}
         </div>
       `;
 
@@ -4063,6 +4241,7 @@ const genericBody = `
     renderWorksCards(detailWorks, v.works, (name, k, val) => {
       if(!v.works[name]) v.works[name] = {done:'', next:'', km:'', notes:''};
       v.works[name][k] = val;
+      markUpdated(v);
       saveDB();
     }, v.hiddenWorks || []);
 
@@ -4084,6 +4263,7 @@ const genericBody = `
       v.dni = (dDni.value || '').trim().toUpperCase();
       v.phone = dPhone.value || '';
       if(dGeneralNotes) v.generalNotes = dGeneralNotes.value || '';
+      markUpdated(v);
       saveDB();
       renderList();
       renderHomeAlerts();
@@ -4096,26 +4276,176 @@ const genericBody = `
     const v = getCurrentVehicle();
     if(!v) return;
     addCustomWorkTo(v);
+    markUpdated(v);
     saveDB();
     renderHomeAlerts();
     renderWorksCards(detailWorks, v.works, (name, k, val) => {
       if(!v.works[name]) v.works[name] = {done:'', next:'', km:'', notes:''};
       v.works[name][k] = val;
+      markUpdated(v);
       saveDB();
     }, v.hiddenWorks || []);
   });
 
-  onTap(btnDeleteVehicle, () => {
+  const performDeleteCurrentVehicle = () => {
     const v = getCurrentVehicle();
-    if(!v) return;
-    if(!confirm('¿Eliminar este vehículo?')) return;
-    db.vehicles = db.vehicles.filter(x => x.id !== currentVehicleId);
+    if(!v) return false;
+
+    try{
+      localStorage.setItem('talleres_lista_pre_eliminar_vehiculo_' + Date.now(), JSON.stringify(db));
+    }catch(e){}
+
+    const idToDelete = String(currentVehicleId || '');
+    db.vehicles = db.vehicles.filter(x => String(x.id || '') !== idToDelete);
     currentVehicleId = null;
     saveDB();
     renderList();
     renderHomeAlerts();
     showView(listView);
-  });
+    return true;
+  };
+
+  const getDeleteVehicleLabel = () => {
+    const v = getCurrentVehicle();
+    if(!v) return '';
+    return ((v.plate || '').trim() || '(sin matrícula)') + (v.vehicle ? ' - ' + v.vehicle : '');
+  };
+
+  const closeDeleteVehicleModal = () => {
+    const modal = document.getElementById('deleteVehicleModal');
+    if(modal){
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden','true');
+    }
+  };
+
+  const askDeleteVehicle = (ev) => {
+    if(ev){
+      try{ ev.preventDefault(); }catch(e){}
+      try{ ev.stopPropagation(); }catch(e){}
+      try{ ev.stopImmediatePropagation(); }catch(e){}
+    }
+
+    const v = getCurrentVehicle();
+    if(!v){
+      alert('No hay ningún vehículo abierto para eliminar.');
+      return;
+    }
+
+    const modal = document.getElementById('deleteVehicleModal');
+    const text = document.getElementById('deleteVehicleText');
+
+    if(text){
+      text.textContent = '¿Seguro que quieres eliminar este vehículo? ' + getDeleteVehicleLabel() + '. Antes de borrar se guardará una copia interna de seguridad.';
+    }
+
+    if(modal){
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden','false');
+      return;
+    }
+
+    if(confirm('¿Eliminar este vehículo?\n\n' + getDeleteVehicleLabel())){
+      performDeleteCurrentVehicle();
+    }
+  };
+
+  window.__talleresAskDeleteVehicle = askDeleteVehicle;
+
+  const bindDeleteButtonSafe = (el) => {
+    if(!el) return;
+    ['click','touchend','pointerup'].forEach((evtName) => {
+      el.addEventListener(evtName, askDeleteVehicle, {passive:false});
+    });
+  };
+
+  bindDeleteButtonSafe(btnDeleteVehicle);
+  bindDeleteButtonSafe(document.getElementById('btnDeleteVehicleInline'));
+
+  document.addEventListener('click', (ev) => {
+    const target = ev.target && ev.target.closest ? ev.target.closest('[data-action="delete-current-vehicle"]') : null;
+    if(target) askDeleteVehicle(ev);
+  }, {capture:true, passive:false});
+
+  document.addEventListener('touchend', (ev) => {
+    const target = ev.target && ev.target.closest ? ev.target.closest('[data-action="delete-current-vehicle"]') : null;
+    if(target) askDeleteVehicle(ev);
+  }, {capture:true, passive:false});
+
+  const cancelDeleteVehicle = document.getElementById('cancelDeleteVehicle');
+  const confirmDeleteVehicle = document.getElementById('confirmDeleteVehicle');
+  const deleteVehicleModal = document.getElementById('deleteVehicleModal');
+
+  if(cancelDeleteVehicle){
+    ['click','touchend','pointerup'].forEach((evtName) => {
+      cancelDeleteVehicle.addEventListener(evtName, (ev) => {
+        if(ev){ try{ ev.preventDefault(); }catch(e){} try{ ev.stopPropagation(); }catch(e){} }
+        closeDeleteVehicleModal();
+      }, {passive:false});
+    });
+  }
+
+  if(confirmDeleteVehicle){
+    let confirmDeleteLock = 0;
+    ['click','touchend','pointerup'].forEach((evtName) => {
+      confirmDeleteVehicle.addEventListener(evtName, (ev) => {
+        if(ev){ try{ ev.preventDefault(); }catch(e){} try{ ev.stopPropagation(); }catch(e){} }
+        const now = Date.now();
+        if(now - confirmDeleteLock < 650) return;
+        confirmDeleteLock = now;
+        closeDeleteVehicleModal();
+        performDeleteCurrentVehicle();
+      }, {passive:false});
+    });
+  }
+
+  if(deleteVehicleModal){
+    deleteVehicleModal.addEventListener('click', (ev) => {
+      if(ev.target === deleteVehicleModal) closeDeleteVehicleModal();
+    }, {passive:true});
+  }
+
+  // v4.2 - Delegación global: el modal se inserta al final del HTML,
+  // por eso estos botones deben capturarse aunque se creen después del script.
+  document.addEventListener('click', (ev) => {
+    const cancelBtn = ev.target && ev.target.closest ? ev.target.closest('#cancelDeleteVehicle') : null;
+    const confirmBtn = ev.target && ev.target.closest ? ev.target.closest('#confirmDeleteVehicle') : null;
+
+    if(cancelBtn){
+      try{ ev.preventDefault(); }catch(e){}
+      try{ ev.stopPropagation(); }catch(e){}
+      closeDeleteVehicleModal();
+      return;
+    }
+
+    if(confirmBtn){
+      try{ ev.preventDefault(); }catch(e){}
+      try{ ev.stopPropagation(); }catch(e){}
+      closeDeleteVehicleModal();
+      performDeleteCurrentVehicle();
+      return;
+    }
+  }, {capture:true, passive:false});
+
+  document.addEventListener('touchend', (ev) => {
+    const cancelBtn = ev.target && ev.target.closest ? ev.target.closest('#cancelDeleteVehicle') : null;
+    const confirmBtn = ev.target && ev.target.closest ? ev.target.closest('#confirmDeleteVehicle') : null;
+
+    if(cancelBtn){
+      try{ ev.preventDefault(); }catch(e){}
+      try{ ev.stopPropagation(); }catch(e){}
+      closeDeleteVehicleModal();
+      return;
+    }
+
+    if(confirmBtn){
+      try{ ev.preventDefault(); }catch(e){}
+      try{ ev.stopPropagation(); }catch(e){}
+      closeDeleteVehicleModal();
+      performDeleteCurrentVehicle();
+      return;
+    }
+  }, {capture:true, passive:false});
 
   let addWorksObj = emptyWorksFromList(DEFAULT_WORKS);
   let addHiddenWorks = [];
@@ -4163,6 +4493,7 @@ const genericBody = `
     v.generalNotes = aGeneralNotes ? (aGeneralNotes.value || '') : '';
     v.hiddenWorks = Array.isArray(addHiddenWorks) ? addHiddenWorks.slice() : [];
     v.works = addWorksObj;
+    markUpdated(v);
 
     db.vehicles.unshift(v);
     saveDB();
@@ -4208,6 +4539,43 @@ const genericBody = `
     setTimeout(() => URL.revokeObjectURL(url), 2000);
   };
 
+  const mergeVehicles = (incomingVehicles) => {
+    const now = Date.now();
+    const localByKey = new Map();
+    db.vehicles.forEach(v => {
+      if(!v.id) v.id = makeVehicleId();
+      if(typeof v.updatedAt !== 'number' || !isFinite(v.updatedAt)) v.updatedAt = now;
+      localByKey.set(getVehicleKey(v), v);
+    });
+
+    let added = 0, updated = 0, kept = 0;
+    incomingVehicles.forEach(src => {
+      if(!src || typeof src !== 'object') return;
+      const incoming = JSON.parse(JSON.stringify(src));
+      if(!incoming.id) incoming.id = makeVehicleId();
+      if(typeof incoming.id !== 'string') incoming.id = String(incoming.id);
+      if(typeof incoming.updatedAt !== 'number' || !isFinite(incoming.updatedAt)) incoming.updatedAt = now;
+
+      const key = getVehicleKey(incoming);
+      const local = localByKey.get(key);
+      if(!local){
+        db.vehicles.unshift(incoming);
+        localByKey.set(key, incoming);
+        added++;
+        return;
+      }
+      if((incoming.updatedAt || 0) > (local.updatedAt || 0)){
+        Object.keys(local).forEach(k => delete local[k]);
+        Object.assign(local, incoming);
+        updated++;
+      }else{
+        kept++;
+      }
+    });
+    normalizeDB();
+    return {added, updated, kept};
+  };
+
   const restoreBackup = async (file) => {
     const text = await file.text();
     let payload;
@@ -4217,12 +4585,20 @@ const genericBody = `
                : (payload && Array.isArray(payload.vehicles) ? payload : null);
 
     if(!newDB){ alert('El archivo no tiene el formato esperado.'); return; }
-    if(!confirm('Esto reemplazará los datos actuales. ¿Continuar?')) return;
+    const currentCount = Array.isArray(db.vehicles) ? db.vehicles.length : 0;
+    const incomingCount = Array.isArray(newDB.vehicles) ? newDB.vehicles.length : 0;
+    if(!confirm('Se fusionará esta copia con los datos actuales.\n\nVehículos actuales: ' + currentCount + '\nVehículos en la copia: ' + incomingCount + '\n\nNo se borrarán vehículos locales. ¿Continuar?')) return;
 
+    try{
+      localStorage.setItem('talleres_lista_pre_importacion_' + Date.now(), JSON.stringify(db));
+    }catch(e){}
+
+    let result;
     try {
-      localStorage.setItem(STORAGE, JSON.stringify(newDB));
+      result = mergeVehicles(newDB.vehicles || []);
+      saveDB();
     } catch(e){
-      alert('No se pudo guardar en el dispositivo (almacenamiento lleno o restringido).');
+      alert('No se pudo fusionar la copia en este dispositivo.');
       return;
     }
 
@@ -4237,11 +4613,11 @@ const genericBody = `
       }
     } catch(e){}
 
-    const reloaded = loadDB();
-    db.vehicles = reloaded.vehicles || [];
-    saveDB();
     renderList();
-    alert('Copia restaurada ✅');
+    renderHomeAlerts();
+    const msg = 'Copia fusionada ✅\nAñadidos: ' + result.added + '\nActualizados: ' + result.updated + '\nConservados: ' + result.kept + '\nTotal actual: ' + db.vehicles.length;
+    if(backupStatus) backupStatus.textContent = msg.replace(/\n/g, ' · ');
+    alert(msg);
     showView(listView);
   };
 
@@ -4527,209 +4903,98 @@ document.addEventListener('blur', function(e){
 
 
 <script>
-/* v4.1.2 iOS18 keyboard wake */
+/* v4.1.5 iOS/iPhone: no abrir teclado/campo al deslizar sobre inputs */
 (function(){
-  function wakeKeyboard(e){
-    const el = e.target.closest('input, textarea, select');
-    if(!el) return;
-    el.focus();
+  let touchInfo = null;
+  let lastScrollTouchAt = 0;
+  const MOVE_LIMIT = 10;
+
+  function editableFromEvent(e){
+    if(!e || !e.target || !e.target.closest) return null;
+    return e.target.closest('input, textarea, select');
   }
 
-  document.addEventListener('touchstart', wakeKeyboard, {passive:true});
-  document.addEventListener('click', wakeKeyboard, true);
+  document.addEventListener('touchstart', function(e){
+    const el = editableFromEvent(e);
+    if(!el || !e.touches || !e.touches.length) return;
+    const t = e.touches[0];
+    touchInfo = {
+      el,
+      x: t.clientX,
+      y: t.clientY,
+      moved: false,
+      at: Date.now()
+    };
+  }, {passive:true, capture:true});
+
+  document.addEventListener('touchmove', function(e){
+    if(!touchInfo || !e.touches || !e.touches.length) return;
+    const t = e.touches[0];
+    const dx = Math.abs(t.clientX - touchInfo.x);
+    const dy = Math.abs(t.clientY - touchInfo.y);
+    if(dx > MOVE_LIMIT || dy > MOVE_LIMIT){
+      touchInfo.moved = true;
+      lastScrollTouchAt = Date.now();
+    }
+  }, {passive:true, capture:true});
+
+  document.addEventListener('touchend', function(e){
+    if(!touchInfo) return;
+    const info = touchInfo;
+    touchInfo = null;
+
+    // Si era scroll, no dejamos que el campo quede activo ni que salte el teclado.
+    if(info.moved){
+      lastScrollTouchAt = Date.now();
+      if(document.activeElement === info.el && info.el.blur){
+        info.el.blur();
+      }
+      return;
+    }
+
+    // Si fue toque limpio, mantenemos la edición normal en iOS.
+    if(info.el && info.el.focus){
+      setTimeout(function(){
+        if(Date.now() - lastScrollTouchAt > 180){
+          info.el.focus();
+        }
+      }, 0);
+    }
+  }, {passive:true, capture:true});
+
+  document.addEventListener('focusin', function(e){
+    const el = editableFromEvent(e);
+    if(!el) return;
+    if(Date.now() - lastScrollTouchAt < 220){
+      setTimeout(function(){
+        if(document.activeElement === el && el.blur) el.blur();
+      }, 0);
+    }
+  }, true);
+
+  document.addEventListener('click', function(e){
+    const el = editableFromEvent(e);
+    if(!el) return;
+    if(Date.now() - lastScrollTouchAt < 220){
+      e.preventDefault();
+      e.stopPropagation();
+      if(el.blur) el.blur();
+    }
+  }, true);
 })();
 </script>
 
 
-<!-- TECLADO PRO FIX INTEGRADO v5.3 REAL -->
-<style>
-#btnKeyboard{
-  position:fixed;
-  bottom:110px;
-  right:20px;
-  z-index:9999;
-  padding:12px;
-  border-radius:12px;
-  background:#0E4C92;
-  color:#fff;
-  display:none;
-}
-#keyboard{
-  position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
-  background:#d1d5db;
-  padding:6px;
-  padding-bottom: calc(env(safe-area-inset-bottom) + 6px);
-  display:none;
-  z-index:9998;
-}
-#keyboard .kb-inner{
-  max-width:420px;
-  margin:0 auto;
-}
-#keyboard .row{
-  display:flex;
-  justify-content:center;
-  gap:6px;
-  margin-bottom:6px;
-  flex-wrap:nowrap;
-}
-#keyboard .key{
-  width:32px;
-  height:44px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#fff;
-  border-radius:8px;
-  font-size:18px;
-  color:#000;
-  flex-shrink:0;
-}
-#keyboard .space{width:140px;}
-#keyboard .dark{width:48px;background:#9ca3af;}
-#keyboard .enter{width:70px;background:#3b82f6;color:#fff;}
-#keyboard .settings{width:48px;background:#111;color:#fff;}
-#keyboard #panel{
-  position:absolute;
-  bottom:100%;
-  left:50%;
-  transform:translateX(-50%);
-  background:#111;
-  padding:10px;
-  border-radius:12px;
-  display:none;
-  width:220px;
-}
-</style>
-
-<button id="btnKeyboard">⌨️</button>
-<div id="keyboard"></div>
-
-<script>
-let currentInput=null;
-let cursorPos=0;
-let shift=false;
-
-const kb=document.getElementById("keyboard");
-const btn=document.getElementById("btnKeyboard");
-
-document.addEventListener("focusin",(e)=>{
-  if(e.target.tagName==="INPUT" || e.target.tagName==="TEXTAREA"){
-    currentInput=e.target;
-    cursorPos=currentInput.value.length;
-    btn.style.display="block";
-  }
-});
-
-btn.onclick=()=>{
-  kb.style.display="block";
-  btn.style.display="none";
-  renderKeyboard();
-};
-
-function cerrarTeclado(){
-  kb.style.display="none";
-  btn.style.display="block";
-}
-
-function renderKeyboard(){
-  kb.innerHTML=`
-  <div class="kb-inner">
-    <div id="panel">
-      🎨 Teclas<br>
-      <input type="color" id="cKeys"><br>
-      🎨 Fondo<br>
-      <input type="color" id="cBg"><br>
-      🎨 Texto<br>
-      <input type="color" id="cText">
+<div class="deleteVehicleModal" id="deleteVehicleModal" aria-hidden="true">
+  <div class="deleteVehicleCard" role="dialog" aria-modal="true" aria-labelledby="deleteVehicleTitle">
+    <h3 class="deleteVehicleTitle" id="deleteVehicleTitle">Eliminar vehículo</h3>
+    <p class="deleteVehicleText" id="deleteVehicleText">¿Seguro que quieres eliminar este vehículo?</p>
+    <div class="deleteVehicleActions">
+      <button class="primary" id="cancelDeleteVehicle" type="button">Cancelar</button>
+      <button class="danger" id="confirmDeleteVehicle" type="button">Sí, eliminar</button>
     </div>
-  </div>`;
-
-  const wrap = kb.querySelector(".kb-inner");
-
-  ["qwertyuiop","asdfghjklñ","zxcvbnm"].forEach((r,i)=>{
-    let row=document.createElement("div");
-    row.className="row";
-
-    if(i===2) row.appendChild(createKey("↑","dark"));
-    r.split("").forEach(k=>row.appendChild(createKey(k)));
-    if(i===2) row.appendChild(createKey("⌫","dark"));
-
-    wrap.appendChild(row);
-  });
-
-  let last=document.createElement("div");
-  last.className="row";
-  last.appendChild(createKey("123","dark"));
-  last.appendChild(createKey("⚙️","settings"));
-  last.appendChild(createKey("espacio","space"));
-  last.appendChild(createKey("Cerrar","enter"));
-  wrap.appendChild(last);
-
-  bindPanel();
-}
-
-function createKey(k,cls=""){
-  let key=document.createElement("div");
-  key.className="key "+cls;
-  key.textContent=shift?k.toUpperCase():k;
-  key.onclick=()=>pressKey(k);
-  return key;
-}
-
-function pressKey(k){
-  if(!currentInput) return;
-
-  if(k==="↑"){ shift=!shift; renderKeyboard(); return; }
-
-  if(k==="⌫"){
-    if(cursorPos>0){
-      currentInput.value=currentInput.value.slice(0,cursorPos-1)+currentInput.value.slice(cursorPos);
-      cursorPos--;
-    }
-    return;
-  }
-
-  if(k==="espacio"){ insertChar(" "); return; }
-
-  if(k==="⚙️"){
-    let p=document.getElementById("panel");
-    p.style.display=p.style.display==="block"?"none":"block";
-    return;
-  }
-
-  if(k==="Cerrar"){
-    cerrarTeclado();
-    currentInput.blur();
-    return;
-  }
-
-  if(k.length===1){
-    insertChar(shift?k.toUpperCase():k);
-    if(shift) shift=false;
-  }
-}
-
-function insertChar(char){
-  currentInput.value=currentInput.value.slice(0,cursorPos)+char+currentInput.value.slice(cursorPos);
-  cursorPos++;
-}
-
-function bindPanel(){
-  document.getElementById("cKeys").oninput=e=>{
-    document.querySelectorAll("#keyboard .key").forEach(k=>k.style.background=e.target.value);
-  };
-  document.getElementById("cBg").oninput=e=>{
-    kb.style.background=e.target.value;
-  };
-  document.getElementById("cText").oninput=e=>{
-    document.querySelectorAll("#keyboard .key").forEach(k=>k.style.color=e.target.value);
-  };
-}
-</script>
+  </div>
+</div>
 
 </body>
 </html>

@@ -3,7 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Pruebas v1.2</title>
+<title>Pruebas v1.3</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0E4C92">
+<link rel="apple-touch-icon" href="icono.png">
 
 <style>
 body{
@@ -14,26 +18,46 @@ body{
 }
 .header{
   padding:20px;
+  padding-top:40px;
   text-align:center;
+}
+.header h1{
+  margin:0;
+  font-size:26px;
+}
+.sub{
+  opacity:.6;
+  font-size:14px;
+  margin-top:6px;
+}
+.version{
+  opacity:.5;
+  font-size:12px;
+  margin-top:4px;
+}
+.container{
+  padding:16px;
 }
 .grid{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:12px;
-  padding:16px;
 }
-button{
+.btn{
+  display:block;
+  text-align:center;
   padding:16px;
   border-radius:14px;
-  border:none;
   background:#0E4C92;
   color:#fff;
+  text-decoration:none;
   font-size:16px;
 }
-.hint{
+.footer{
+  text-align:center;
+  margin-top:20px;
   font-size:12px;
-  opacity:.6;
-  margin-top:8px;
+  opacity:.5;
 }
 </style>
 </head>
@@ -41,37 +65,23 @@ button{
 <body>
 
 <div class="header">
-  <h2>🧪 Pruebas v1.2</h2>
-  <div class="hint">Las apps se abrirán automáticamente donde funcionen mejor</div>
+  <h1>🧪 Pruebas</h1>
+  <div class="sub">Las apps se abren en Safari</div>
+  <div class="version">v1.3</div>
 </div>
 
-<div class="grid">
-  <button onclick="openApp('app.html')">App 1</button>
-  <button onclick="openApp('app2.html')">App 2</button>
-  <button onclick="openApp('app3.html')">App 3</button>
-  <button onclick="openApp('app4.html')">App 4</button>
+<div class="container">
+  <div class="grid">
+    <a href="app.html" target="_blank" class="btn">App 1</a>
+    <a href="app2.html" target="_blank" class="btn">App 2</a>
+    <a href="app3.html" target="_blank" class="btn">App 3</a>
+    <a href="app4.html" target="_blank" class="btn">App 4</a>
+    <a href="app5.html" target="_blank" class="btn">App 5</a>
+    <a href="app6.html" target="_blank" class="btn">App 6</a>
+  </div>
+
+  <div class="footer">iOS Test Lab</div>
 </div>
-
-<script>
-function isIOS(){
-  return /iphone|ipad|ipod/i.test(navigator.userAgent);
-}
-
-function isStandalone(){
-  return window.navigator.standalone === true;
-}
-
-function openApp(file){
-  if(isIOS() && isStandalone()){
-    window.location.href = file;
-    setTimeout(()=>{
-      window.open(file, "_blank");
-    }, 100);
-  } else {
-    window.location.href = file;
-  }
-}
-</script>
 
 </body>
 </html>

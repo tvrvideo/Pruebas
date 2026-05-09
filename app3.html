@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Teclado PRO v2.7 (Copiar/Pegar)</title>
+
+<style>
+body{
+  margin:0;
+  font-family:-apple-system;
+  background:#0b1220;
+  color:#fff;
+  padding:20px;
+}
+
+.inputBox{
+  width:100%;
+  padding:14px;
+  font-size:20px;
+  border-radius:10px;
+  background:#fff;
+  color:#000;
+  margin-bottom:20px;
+  min-height:28px;
+}
+
+.keyboard{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:#d1d5db;
+  padding:6px;
+  display:none;
+}
+
+.row{
+  display:flex;
+  justify-content:center;
+  margin-bottom:4px;
+}
+
+.key{
+  background:#fff;
+  color:#000;
+  margin:2px;
+  padding:10px 6px;
+  border-radius:6px;
+  font-size:18px;
+  flex:1;
+  text-align:center;
+}
+
+.key.small{flex:0.7;}
+.key.space{flex:3;}
+.key.dark{background:#9ca3af;}
+.key.action{background:#3b82f6;color:#fff;}
+.key.tool{background:#10b981;color:#fff;}
+</style>
+</head>
+
+<body>
+
+<h2>Teclado PRO v2.7</h2>
+
+<div class="inputBox" id="inputBox"></div>
+
+<div class="keyboard" id="kb"></div>
+
+<script>
+let value = "";
+let cursorPos = 0;
+
+let shift=false;
+let caps=false;
+let lastShiftTime=0;
+let mode="letters";
+
+const kb=document.getElementById("kb");
+const inputBox=document.getElementById("inputBox");
+
+// ===== render texto
+function updateText(){
+  const before = value.slice(0,cursorPos);
+  const after = value.slice(cursorPos);
+  inputBox.innerHTML = before + '<span style="display:inline-block;width:2px;height:20px;background:#000;"></span>' + after;
+}
+
+// ===== abrir teclado
+inputBox.onclick = function(){
+  kb.style.display="block";
+  render();
+  updateText();
+};
+
+// ===== teclado
+function render(){
+  kb.innerHTML="";
+
+  let layout = mode==="letters"
+    ? ["qwertyuiop","asdfghjklñ","zxcvbnm"]
+    : ["1234567890","-/:;()€&@",".,?!'"];
+
+  layout.forEach(r=>{
+    let row=document.createElement("div");
+    row.className="row";
+
+    r.split("").forEach(k=>{
+      let key=document.createElement("div");
+      key.className="key";
+      let char=(caps||shift)?k.toUpperCase():k;
+      key.textContent=char;
+      key.onclick=()=>press(k);
+      row.appendChild(key);
+    });
+
+    kb.appendChild(row);
+  });
+
+  // fila acciones
+  let last=document.createElement("div");
+  last.className="row";
+
+  last.innerHTML=`
+    <div class="key dark small" onclick="handleShift()">↑</div>
+    <div class="key dark small" onclick="toggleMode()">${mode==="letters"?"123":"ABC"}</div>
+    <div class="key space" onclick="press(' ')">espacio</div>
+    <div class="key dark small" onclick="del()">⌫</div>
+    <div class="key action small" onclick="closeKB()">OK</div>
+  `;
+
+  kb.appendChild(last);
+
+  // herramientas copiar pegar
+  let tools=document.createElement("div");
+  tools.className="row";
+
+  tools.innerHTML=`
+    <div class="key tool" onclick="copyText()">Copiar</div>
+    <div class="key tool" onclick="pasteText()">Pegar</div>
+    <div class="key tool" onclick="clearText()">Clear</div>
+  `;
+
+  kb.appendChild(tools);
+}
+
+// ===== acciones
+function press(k){
+  let char=(caps||shift)?k.toUpperCase():k;
+  value = value.slice(0,cursorPos) + char + value.slice(cursorPos);
+  cursorPos++;
+
+  if(shift && !caps) shift=false;
+
+  updateText();
+  render();
+}
+
+function del(){
+  if(cursorPos===0) return;
+  value = value.slice(0,cursorPos-1) + value.slice(cursorPos);
+  cursorPos--;
+  updateText();
+}
+
+function handleShift(){
+  let now=Date.now();
+  if(now-lastShiftTime<300){
+    caps=!caps;
+    shift=false;
+  }else{
+    shift=!shift;
+  }
+  lastShiftTime=now;
+  render();
+}
+
+function toggleMode(){
+  mode=mode==="letters"?"num":"letters";
+  render();
+}
+
+function closeKB(){
+  kb.style.display="none";
+}
+
+// ===== copiar pegar
+function copyText(){
+  const temp=document.createElement("textarea");
+  temp.value=value;
+  document.body.appendChild(temp);
+  temp.select();
+  document.execCommand("copy");
+  document.body.removeChild(temp);
+}
+
+function pasteText(){
+  const temp=document.createElement("textarea");
+  document.body.appendChild(temp);
+  temp.focus();
+  document.execCommand("paste");
+  value += temp.value;
+  cursorPos=value.length;
+  document.body.removeChild(temp);
+  updateText();
+}
+
+function clearText(){
+  value="";
+  cursorPos=0;
+  updateText();
+}
+
+// init
+updateText();
+
+</script>
+
+</body>
+</html>
